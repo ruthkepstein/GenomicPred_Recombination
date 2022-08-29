@@ -5,7 +5,7 @@ library(Rcpp)
 library(ggplot2)
 library(dplyr)
 
-setwd("/home/rke27/Documents")
+setwd("/home/rke27/GenomicPred_Recombination")
 set.seed(420)
 
 ##reading in SNPs from B73xMo17 based on v4 B73 ref
@@ -486,8 +486,8 @@ chr9 <- as.data.frame(chr9_finalpos$pos/100)
 chr9 <- chr9[!(rownames(chr9) %in% rownames(chr9_QTL)), ]
 
 #how many SNPs each chromosome has
-segSites <- c(length(chr1), length(chr2), length(chr3), length(chr4), length(chr5), length(chr6),
-              length(chr7), length(chr8), length(chr9), length(chr10))
+segSites <- c(length(final_map[[1]]), length(final_map[[2]]), length(final_map[[3]]), length(final_map[[4]]), length(final_map[[5]]), length(final_map[[6]]),
+              length(final_map[[7]]), length(final_map[[8]]), length(final_map[[9]]), length(final_map[[10]]))
 
 #putting together the final map
 final_map = vector("list",10)
@@ -509,6 +509,29 @@ real_centromere <- c(112.1948, 106.0157, 80.47144, 82.66890, 101.1340,
                      15, 66.1, 66.44142, 67.34964, 60.48587)
 real_centromere <- real_centromere/100
 
+final_map <- readRDS("final_map_20000SNPs.RData")
+
+chr1_QTL <- readRDS("chr1_QTL.RData")
+chr1_QTL <- chr1_QTL$chr1_QTL
+chr2_QTL <- readRDS("chr2_QTL.RData")
+chr2_QTL <- chr2_QTL$chr2_QTL
+chr3_QTL <- readRDS("chr3_QTL.RData")
+chr3_QTL <- chr3_QTL$chr3_QTL
+chr4_QTL <- readRDS("chr4_QTL.RData")
+chr4_QTL <- chr4_QTL$chr4_QTL
+chr5_QTL <- readRDS("chr5_QTL.RData")
+chr5_QTL <- chr5_QTL$chr5_QTL
+chr6_QTL <- readRDS("chr6_QTL.RData")
+chr6_QTL <- chr6_QTL$chr6_QTL
+chr7_QTL <- readRDS("chr7_QTL.RData")
+chr7_QTL <- chr7_QTL$chr7_QTL
+chr8_QTL <- readRDS("chr8_QTL.RData")
+chr8_QTL <- chr8_QTL$chr8_QTL
+chr9_QTL <- readRDS("chr9_QTL.RData")
+chr9_QTL <- chr9_QTL$chr9_QTL
+chr10_QTL <- readRDS("chr10_QTL.RData")
+chr10_QTL <- chr10_QTL$chr10_QTL
+
 #generating mix of repulsion and coupling linkages between QTL
 addEff_mix <- rnorm(3000, mean = 0, sd = 0.1)
 sum(addEff_mix)
@@ -522,11 +545,12 @@ for(i in 1:100){
   SP$setTrackRec(TRUE)
   SP$p = 0.15
   #polygenic yield-like trait
-  trait_yield <- new("TraitA", nLoci = 3000L, lociPerChr= c(400L, 400L, 350L, 300L, 300L, 250L, 250L, 250L, 250L, 250L),
-                     lociLoc = c(as.integer(chr1_QTL),as.integer(chr2_QTL),as.integer(chr3_QTL),as.integer(chr4_QTL),as.integer(chr5_QTL),as.integer(chr6_QTL),
-                                 as.integer(chr7_QTL),as.integer(chr8_QTL),as.integer(chr9_QTL),as.integer(chr10_QTL)), addEff = addEff_mix, intercept = 0.1)
+  #trait_yield <- new("TraitA", nLoci = 3000L, lociPerChr= c(400L, 400L, 350L, 300L, 300L, 250L, 250L, 250L, 250L, 250L), 
+       #              lociLoc = as.integer(c(chr1_QTL,chr2_QTL,chr3_QTL,chr4_QTL,chr5_QTL,chr6_QTL,chr7_QTL,chr8_QTL,chr9_QTL,chr10_QTL)), 
+        #             addEff = addEff_mix, intercept = 0.1)
   
-  SP$manAddTrait(trait_yield)
+  #SP$manAddTrait(trait_yield)
+  SP$addTraitA(250, mean = 0, var = 1)
   SP$resetPed()
   
   pop_good <- newPop(founderPop, simParam = SP)
@@ -657,33 +681,38 @@ for(i in 1:100){
   pop_sel10[[i]] <- selectInd(pop_good10, nInd = 200, use = "gv", trait = 1, selectTop = TRUE, returnPop = TRUE, simParam = SP)
 }
 
-#merging populations for each iteration for each generation
-all_pops_gen1 <- mergePops(pop1)
-sel_inds_gen1 <- mergePops(pop_sel)
+#saving the yield trait information, marker effects be accessed with @ sign
+#saving every iteration of the population's breeding program
+#same QTL effects just other iterations
+trait_yield <- SP$traits
+saveRDS(trait_yield[[1]], file = "trait_info.RData")
 
-all_pops_gen2 <- mergePops(pop2)
-sel_inds_gen2 <- mergePops(pop_sel2)
+saveRDS(pop1, file = "all_pops_gen1.RData")
+saveRDS(pop_sel, file = "sel_ind_gen1.RData")
 
-all_pops_gen3 <- mergePops(pop3)
-sel_inds_gen3 <- mergePops(pop_sel3)
+saveRDS(pop2, file = "all_pops_gen2.RData")
+saveRDS(pop_sel2, file = "sel_ind_gen2.RData")
 
-all_pops_gen4 <- mergePops(pop4)
-sel_inds_gen4 <- mergePops(pop_sel4)
+saveRDS(pop3, file = "all_pops_gen3.RData")
+saveRDS(pop_sel3, file = "sel_ind_gen3.RData")
 
-all_pops_gen5 <- mergePops(pop5)
-sel_inds_gen5 <- mergePops(pop_sel5)
+saveRDS(pop4, file = "all_pops_gen4.RData")
+saveRDS(pop_sel4, file = "sel_ind_gen4.RData")
 
-all_pops_gen6 <- mergePops(pop6)
-sel_inds_gen6 <- mergePops(pop_sel6)
+saveRDS(pop5, file = "all_pops_gen5.RData")
+saveRDS(pop_sel5, file = "sel_ind_gen5.RData")
 
-all_pops_gen7 <- mergePops(pop7)
-sel_inds_gen7 <- mergePops(pop_sel7)
+saveRDS(pop6, file = "all_pops_gen6.RData")
+saveRDS(pop_sel6, file = "sel_ind_gen6.RData")
 
-all_pops_gen8 <- mergePops(pop8)
-sel_inds_gen8 <- mergePops(pop_sel8)
+saveRDS(pop7, file = "all_pops_gen7.RData")
+saveRDS(pop_sel7, file = "sel_ind_gen7.RData")
 
-all_pops_gen9 <- mergePops(pop9)
-sel_inds_gen9 <- mergePops(pop_sel9)
+saveRDS(pop8, file = "all_pops_gen8.RData")
+saveRDS(pop_sel8, file = "sel_ind_gen8.RData")
 
-all_pops_gen10 <- mergePops(pop10)
-sel_inds_gen10 <- mergePops(pop_sel10)
+saveRDS(pop9, file = "all_pops_gen9.RData")
+saveRDS(pop_sel9, file = "sel_ind_gen9.RData")
+
+saveRDS(pop10, file = "all_pops_gen10.RData")
+saveRDS(pop_sel10, file = "sel_ind_gen10.RData")
